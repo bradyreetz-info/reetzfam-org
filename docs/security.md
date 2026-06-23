@@ -9,7 +9,7 @@ ReetzFam.org handles contact details, birthdays, relationships, addresses, photo
 - Keep `SUPABASE_SERVICE_ROLE_KEY` and `RESEND_API_KEY` only in Cloudflare encrypted secrets.
 - Add Cloudflare Turnstile and rate limiting to the access-request endpoint.
 - Create private storage buckets and `storage.objects` RLS policies. Use short-lived signed URLs.
-- Make approval a server-side transaction and write admin actions to `audit_log`.
+- Keep approval in protected server-side Functions and write admin actions to `audit_log`.
 - Require MFA for admins, restrict the number of `super_admin` accounts, and review roles periodically.
 - Configure security headers (CSP, HSTS, `Referrer-Policy`, `Permissions-Policy`) at Cloudflare.
 - Set a retention period for denied access requests, logs, and unneeded uploads.
@@ -32,3 +32,5 @@ The included demo mode is for local interface review only. It stores a fictional
 ## Launch verification
 
 Test these cases in an incognito browser and directly against the Supabase API: anonymous visitor, pending user, approved member, editor, suspended account, admin, and super admin. Confirm that guessed URLs and direct REST queries cannot read or mutate data outside each role.
+
+For the approval workflow, test: anonymous API request, approved non-admin member, approved admin, denied request, more-info request, approved request with a new email, and approved request where a matching pending profile already exists.

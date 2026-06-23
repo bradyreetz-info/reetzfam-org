@@ -1,6 +1,6 @@
 # Data model
 
-The source-of-truth draft lives in [`supabase/migrations/001_initial_schema.sql`](../supabase/migrations/001_initial_schema.sql). It creates the first Postgres schema, indexes, helper functions, and starter Row Level Security policies.
+The source-of-truth draft starts in [`supabase/migrations/001_initial_schema.sql`](../supabase/migrations/001_initial_schema.sql). It creates the first Postgres schema, indexes, helper functions, and starter Row Level Security policies. [`supabase/migrations/002_auth_profile_linking.sql`](../supabase/migrations/002_auth_profile_linking.sql) links future Supabase Auth users to already-approved profile records by matching email addresses. [`supabase/migrations/003_admin_review_access_requests.sql`](../supabase/migrations/003_admin_review_access_requests.sql) keeps request review, member profile provisioning, and audit logging together in one database transaction.
 
 ## Core entities
 
@@ -31,8 +31,10 @@ Role never overrides account status. Only `status = approved` may enter the memb
 
 1. The Cloudflare Function validates the public form and inserts an `access_requests` row with `pending` status using the service role.
 2. An admin receives a Resend notification and verifies the relationship outside the portal when necessary.
-3. A server-side approval transaction creates or links the Supabase Auth user, creates the `profiles` row, assigns the minimum role, updates the request, and writes an audit event.
-4. A welcome email is sent only after the transaction succeeds.
+3. The protected admin API verifies the caller's Supabase session and confirms an approved admin profile.
+4. The API calls `review_access_request(...)` so Supabase updates the request, creates or updates the approved `profiles` row, and writes an audit event atomically.
+5. When the approved person later signs in or creates a Supabase Auth account with the same email address, migration `002` links `auth.users.id` to `profiles.auth_user_id`.
+6. A welcome or review-status email is sent after the server-side update succeeds.
 
 Never run the approval lifecycle in browser code and never expose the Supabase service-role key.
 
