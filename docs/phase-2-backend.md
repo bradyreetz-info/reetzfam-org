@@ -10,6 +10,7 @@ This project should keep the browser app and Cloudflare Pages Functions as the d
 - Production branch: `main`
 - Build command: `pnpm run build`
 - Output directory: `dist`
+- Deploy command: blank for normal Pages Git integration. If the Cloudflare build flow requires one, use `npx wrangler pages deploy dist --project-name=reetzfam-org`. Do not use `npx wrangler deploy`; that targets Workers and fails with this Pages config.
 - Custom domains: `reetzfam.org` and optionally `www.reetzfam.org`
 - Function secrets: `SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY`, `ADMIN_APPROVAL_EMAIL`, later `TURNSTILE_SECRET_KEY`
 - Build/runtime variables: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_DEMO_MODE=false`, `APP_BASE_URL=https://reetzfam.org`, optional `RESEND_FROM_EMAIL`
