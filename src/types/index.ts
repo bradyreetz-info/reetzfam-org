@@ -52,7 +52,10 @@ export interface AccessRequest {
   verifier: string
   message?: string
   status: 'pending' | 'approved' | 'denied' | 'more_info'
+  admin_notes?: string | null
   created_at: string
+  reviewed_at?: string | null
+  reviewed_by?: string | null
 }
 
 export interface Announcement {

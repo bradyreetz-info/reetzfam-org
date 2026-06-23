@@ -63,10 +63,14 @@ Copy `.env.example` for local development. In Cloudflare Pages, configure browse
 | `VITE_SUPABASE_URL` | Browser + Function | Supabase project URL |
 | `VITE_SUPABASE_ANON_KEY` | Browser | Public Supabase anon key; safe only with tested RLS |
 | `VITE_DEMO_MODE` | Build | `true` only for non-production previews |
+| `VITE_TURNSTILE_SITE_KEY` | Browser | Public Cloudflare Turnstile site key once enabled |
+| `VITE_API_BASE_URL` | Browser | Optional VPS/API origin if a long-running backend is added |
 | `SUPABASE_SERVICE_ROLE_KEY` | Function secret | Server-only access-request and admin operations |
 | `RESEND_API_KEY` | Function secret | Transactional email delivery |
+| `RESEND_FROM_EMAIL` | Function | Verified sender, for example `ReetzFam.org <access@reetzfam.org>` |
 | `ADMIN_APPROVAL_EMAIL` | Function secret | Family admin receiving access-review notices |
 | `APP_BASE_URL` | Function | Canonical site URL, normally `https://reetzfam.org` |
+| `TURNSTILE_SECRET_KEY` | Function secret | Private Turnstile token validation secret once enabled |
 
 Never prefix a secret with `VITE_`; Vite exposes those variables to browser bundles. Never commit `.env`, `.env.local`, or `.dev.vars`.
 
@@ -76,7 +80,7 @@ Never prefix a secret with `VITE_`; Vite exposes those variables to browser bund
 2. Use build command `pnpm build` and output directory `dist`.
 3. Set Node.js 20 or newer in the build environment.
 4. Add `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`; set `VITE_DEMO_MODE=false` for production.
-5. Add `SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY`, and `ADMIN_APPROVAL_EMAIL` as encrypted Function secrets.
+5. Add `SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY`, `ADMIN_APPROVAL_EMAIL`, and later `TURNSTILE_SECRET_KEY` as encrypted Function secrets.
 6. Add `APP_BASE_URL=https://reetzfam.org`.
 7. Connect the custom domain and enforce HTTPS.
 
@@ -92,14 +96,14 @@ pnpm dlx wrangler pages dev dist
 ## Supabase setup checklist
 
 1. Create separate development/staging and production projects.
-2. Review and apply `supabase/migrations/001_initial_schema.sql` in staging.
+2. Review and apply all SQL files in `supabase/migrations` in order.
 3. Create pending, member, editor, admin, suspended, and super-admin test accounts.
 4. Test every RLS policy through the anon client and direct REST requests; do not rely on route guards.
 5. Configure email verification, site URL, and allowed redirect URLs for `/app`.
 6. Decide whether password, magic link, or both are enabled.
 7. Require MFA for admins.
 8. Create private photo/document buckets and `storage.objects` policies before enabling upload.
-9. Implement the admin approval endpoint as an authenticated, authorized server-side transaction.
+9. Create the first admin profile manually, then test the protected approval endpoints from `/admin/approvals`.
 10. Remove fictional mock data from production queries and keep a separate seed path for development.
 
 See [`docs/schema.md`](docs/schema.md) and [`docs/security.md`](docs/security.md) before launch.
@@ -143,12 +147,13 @@ docs/               Data-model and security guidance
 ## Roadmap
 
 1. Connect Supabase Auth and replace preview reads with RLS-protected queries.
-2. Complete transactional approval/denial APIs, audit logging, and Resend delivery.
-3. Add household and field-level privacy controls, profile photos, and birthday generation.
-4. Add event creation/approval, RSVP support, reminders, and calendar subscriptions.
-5. Connect private Storage or R2 for albums and documents with upload scanning.
-6. Build family-tree relationships, story/source records, and archive-photo identification.
-7. Add admin reporting, data export/removal, backups, accessibility testing, and operational monitoring.
+2. Add Turnstile token validation and durable rate limiting to public request submission.
+3. Replace directory, calendar, and announcements mock reads with RLS-protected Supabase queries.
+4. Add household and field-level privacy controls, profile photos, and birthday generation.
+5. Add event creation/approval, RSVP support, reminders, and calendar subscriptions.
+6. Connect private Storage or R2 for albums and documents with upload scanning.
+7. Build family-tree relationships, story/source records, and archive-photo identification.
+8. Add admin reporting, data export/removal, backups, accessibility testing, and operational monitoring.
 
 ## License
 

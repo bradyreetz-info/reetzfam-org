@@ -46,6 +46,7 @@ p { color: var(--muted); line-height: 1.7; }
 .screen-center { min-height: 100vh; display: grid; place-items: center; }
 .spinner-wrap { display: flex; align-items: center; gap: 10px; color: var(--muted); }
 .spinner { width: 22px; height: 22px; border: 3px solid var(--border); border-top-color: var(--green); border-radius: 999px; animation: spin .8s linear infinite; }
+.spin { animation: spin .8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 .brand { display: inline-flex; align-items: center; gap: 10px; color: var(--green-dark); font-size: 1.13rem; font-weight: 760; letter-spacing: -.025em; }
@@ -408,6 +409,7 @@ input:focus, textarea:focus, select:focus { outline: 0; border-color: var(--gree
 .admin-action-grid div { display: grid; gap: 4px; }
 .admin-action-grid strong { font-size: .85rem; }
 .admin-action-grid span { color: var(--muted); font-size: .7rem; }
+.page-actions { display: flex; align-items: center; justify-content: flex-end; gap: 10px; flex-wrap: wrap; }
 .audit-panel { margin-top: 18px; }
 .status-badge, .count-badge { width: fit-content; padding: 5px 9px; border-radius: 999px; background: #eceeea; color: #5f6863; font-size: .64rem; font-weight: 750; text-transform: capitalize; }
 .count-badge { padding: 8px 12px; background: #f5e7e1; color: var(--terra); }
@@ -423,6 +425,13 @@ input:focus, textarea:focus, select:focus { outline: 0; border-color: var(--gree
 .inline-success > svg { width: 18px; }
 .inline-success button { margin-left: auto; border: 0; background: transparent; color: inherit; }
 .inline-success button svg { width: 17px; }
+.inline-error { display: flex; align-items: center; gap: 9px; margin-bottom: 15px; padding: 12px 14px; border-radius: 10px; background: #fff0ed; color: #943d2d; font-size: .78rem; font-weight: 700; }
+.inline-error svg { width: 18px; flex: 0 0 auto; }
+.loading-panel, .empty-panel { display: grid; place-items: center; gap: 10px; min-height: 180px; margin-bottom: 15px; padding: 24px; border: 1px solid var(--border); border-radius: 15px; background: #fff; color: var(--muted); text-align: center; }
+.loading-panel { grid-auto-flow: column; place-content: center; }
+.loading-panel svg { width: 20px; color: var(--green); }
+.empty-panel h2 { margin: 0; font-size: 1.15rem; }
+.empty-panel p { max-width: 420px; margin: 0; font-size: .86rem; }
 .approval-list { display: grid; gap: 14px; }
 .approval-card { padding: 24px; border: 1px solid var(--border); border-radius: 15px; background: #fff; }
 .approval-card.is-reviewed { opacity: .68; }
