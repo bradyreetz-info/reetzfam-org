@@ -74,25 +74,25 @@ Copy `.env.example` for local development. In Cloudflare Pages, configure browse
 
 Never prefix a secret with `VITE_`; Vite exposes those variables to browser bundles. Never commit `.env`, `.env.local`, or `.dev.vars`.
 
-## Cloudflare Pages deployment
+## Cloudflare deployment
 
-1. Create a Pages project connected to the GitHub repository.
-2. Use build command `pnpm build` and output directory `dist`.
-3. Leave the Pages deploy command blank. Do not use `npx wrangler deploy`; that is a Workers deploy command and will fail for this Pages project.
-4. If Cloudflare requires a deploy command in the selected build flow, use `npx wrangler pages deploy dist --project-name=reetzfam-org`.
+1. Create a Cloudflare Workers/Pages project connected to the GitHub repository.
+2. Use build command `pnpm run build`.
+3. Use deploy command `npx wrangler deploy`.
+4. Keep `wrangler.toml` committed. It defines the Worker entrypoint, the static assets directory, SPA fallback behavior, and API-first routing for `/api/*`.
 5. Set Node.js 20 or newer in the build environment.
 6. Add `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`; set `VITE_DEMO_MODE=false` for production.
 7. Add `SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY`, `ADMIN_APPROVAL_EMAIL`, and later `TURNSTILE_SECRET_KEY` as encrypted Function secrets.
 8. Add `APP_BASE_URL=https://reetzfam.org`.
 9. Connect the custom domain and enforce HTTPS.
 
-`public/_redirects` makes client-side routes work on Pages. `public/_headers` supplies a starter security policy. Tighten the Content Security Policy whenever new services are added.
+`wrangler.toml` now uses Workers static assets with `not_found_handling = "single-page-application"` so client-side routes work after deployment. `public/_headers` supplies a starter security policy. Tighten the Content Security Policy whenever new services are added.
 
-To test Functions locally after configuring `.dev.vars`, build and use Wrangler:
+To test locally after configuring `.dev.vars`, build and use Wrangler:
 
 ```bash
 pnpm build
-pnpm dlx wrangler pages dev dist
+pnpm dlx wrangler dev
 ```
 
 ## Supabase setup checklist

@@ -1,6 +1,12 @@
 name = "reetzfam-org"
-pages_build_output_dir = "./dist"
-compatibility_date = "2026-06-22"
+main = "worker/index.ts"
+compatibility_date = "2026-06-23"
+
+[assets]
+directory = "./dist"
+binding = "ASSETS"
+not_found_handling = "single-page-application"
+run_worker_first = ["/api/*"]
 
 # Store production values in Cloudflare Pages settings or with `wrangler secret put`.
 # Never place service-role or email API keys in this file.

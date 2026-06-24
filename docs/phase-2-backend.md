@@ -1,16 +1,17 @@
 # Phase 2 backend activation
 
-This project should keep the browser app and Cloudflare Pages Functions as the default request path. Use the VPS only for work that benefits from a long-running Node process.
+This project should keep the browser app and Cloudflare edge Functions/Workers as the default request path. Use the VPS only for work that benefits from a long-running Node process.
 
 ## Required providers
 
 ### Cloudflare
 
-- Pages project connected to `bradyreetz-info/reetzfam-org`
+- Workers/Pages project connected to `bradyreetz-info/reetzfam-org`
 - Production branch: `main`
 - Build command: `pnpm run build`
-- Output directory: `dist`
-- Deploy command: blank for normal Pages Git integration. If the Cloudflare build flow requires one, use `npx wrangler pages deploy dist --project-name=reetzfam-org`. Do not use `npx wrangler deploy`; that targets Workers and fails with this Pages config.
+- Deploy command: `npx wrangler deploy`
+- Static assets directory: `dist`, configured in `wrangler.toml`
+- Worker entrypoint: `worker/index.ts`
 - Custom domains: `reetzfam.org` and optionally `www.reetzfam.org`
 - Function secrets: `SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY`, `ADMIN_APPROVAL_EMAIL`, later `TURNSTILE_SECRET_KEY`
 - Build/runtime variables: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_DEMO_MODE=false`, `APP_BASE_URL=https://reetzfam.org`, optional `RESEND_FROM_EMAIL`
@@ -57,6 +58,7 @@ If a VPS API is added later:
 - Public request form posts to `/api/access-requests`
 - Admin approvals read from `/api/admin/access-requests`
 - Admin review actions patch `/api/admin/access-requests/:id`
+- `worker/index.ts` routes `/api/*` requests to the same handler modules used by the original Pages Functions layout, then serves static assets for everything else
 - Admin endpoints require a valid Supabase session and an approved `admin` or `super_admin` profile
 - Approval calls the `review_access_request(...)` RPC so request review, member profile provisioning, and audit logging happen atomically
 - The auth-linking migration connects approved profiles to future Supabase Auth users by email
