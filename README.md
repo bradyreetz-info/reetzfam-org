@@ -7,11 +7,12 @@ This repository contains a polished first product pass. It runs with fictional p
 ## What is included
 
 - Public homepage, privacy page, login, and manually reviewed access-request flow
-- Supabase-aware email/password and magic-link authentication provider
+- Supabase-aware email/password, sign-up, password reset, and magic-link authentication provider
 - Authentication guard for all `/app/*` routes and role guard for all `/admin/*` routes
 - Member dashboard, searchable family directory, profile detail, FullCalendar month/list views, announcements, profile editing, library placeholders, and family-history placeholder
 - Admin dashboard, approval workflow preview, protected management sections, and audit-log placeholder
 - Cloudflare Pages Function that validates and stores a pending access request, then notifies the admin through Resend
+- Protected admin approval actions that activate approved profiles, deny pending profiles when appropriate, write audit logs, and send requester emails
 - Responsive visual system with accessible labels, focus states, reduced-motion support, empty/error/success states, and older-user-friendly sizing
 - Initial Supabase schema/RLS migration, email templates, security model, and deployment notes
 
@@ -109,6 +110,15 @@ pnpm dlx wrangler dev
 10. Remove fictional mock data from production queries and keep a separate seed path for development.
 
 See [`docs/schema.md`](docs/schema.md) and [`docs/security.md`](docs/security.md) before launch.
+
+### Current approval and login flow
+
+1. A visitor submits `/request-access`.
+2. `/api/access-requests` inserts a pending `access_requests` row with the service role and sends the admin approval email.
+3. An approved admin reviews the request at `/admin/approvals`.
+4. Approval calls `review_access_request(...)`, activates or creates the matching approved profile, writes `audit_log`, and sends the welcome email.
+5. The approved person uses `/login` to create an account, sign in with password, or request an email link. Supabase links the Auth user to the approved profile by matching email.
+6. Pending or denied users can sign in, but route guards and RLS keep member data private.
 
 ## Resend setup checklist
 

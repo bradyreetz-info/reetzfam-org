@@ -1,12 +1,6 @@
 import { newAccessRequestEmail } from './_shared/email-templates'
-
-interface Env {
-  VITE_SUPABASE_URL: string
-  SUPABASE_SERVICE_ROLE_KEY: string
-  RESEND_API_KEY: string
-  ADMIN_APPROVAL_EMAIL: string
-  APP_BASE_URL?: string
-}
+import { sendEmail } from './_shared/send-email'
+import type { Env } from './_shared/supabase-admin'
 
 interface PagesContext { request: Request; env: Env }
 
@@ -57,22 +51,22 @@ export const onRequestPost = async ({ request, env }: PagesContext) => {
     console.error('Supabase access request insert failed', insertResponse.status)
     return json({ error: 'We could not save your request. Please try again later.' }, 500)
   }
+
   const [created] = await insertResponse.json() as Array<{ id: string }>
   const baseUrl = env.APP_BASE_URL || new URL(request.url).origin
   const emailTemplate = newAccessRequestEmail({
-    name: `${record.first_name} ${record.last_name}`, email: record.email, phone: record.phone ?? undefined,
-    relationship: record.relationship, verifier: record.verifier, message: record.message ?? undefined,
+    name: `${record.first_name} ${record.last_name}`,
+    email: record.email,
+    phone: record.phone ?? undefined,
+    relationship: record.relationship,
+    verifier: record.verifier,
+    message: record.message ?? undefined,
     reviewUrl: `${baseUrl}/admin/approvals?request=${encodeURIComponent(created.id)}`,
   })
-  const emailResponse = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ from: 'ReetzFam.org <access@reetzfam.org>', to: [env.ADMIN_APPROVAL_EMAIL], subject: emailTemplate.subject, html: emailTemplate.html }),
-  })
-  if (!emailResponse.ok) console.error('Resend notification failed', emailResponse.status)
+  const emailSent = await sendEmail(env, env.ADMIN_APPROVAL_EMAIL, emailTemplate)
 
   // The request is safely pending even if email delivery fails; admin dashboards should also query pending records.
-  return json({ ok: true, id: created.id, status: 'pending' }, 201)
+  return json({ ok: true, id: created.id, status: 'pending', email_sent: emailSent }, 201)
 }
 
 export const onRequest = () => json({ error: 'Method not allowed.' }, 405)
