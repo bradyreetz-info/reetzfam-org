@@ -63,6 +63,8 @@ Copy `.env.example` for local development. In Cloudflare Pages, configure browse
 | --- | --- | --- |
 | `VITE_SUPABASE_URL` | Browser + Function | Supabase project URL |
 | `VITE_SUPABASE_ANON_KEY` | Browser | Public Supabase anon key; safe only with tested RLS |
+| `SUPABASE_URL` | Worker runtime | Optional server-side alias for `VITE_SUPABASE_URL` |
+| `SUPABASE_ANON_KEY` | Worker runtime | Optional server-side alias for `VITE_SUPABASE_ANON_KEY` |
 | `VITE_DEMO_MODE` | Build | `true` only for non-production previews |
 | `VITE_TURNSTILE_SITE_KEY` | Browser | Public Cloudflare Turnstile site key once enabled |
 | `VITE_API_BASE_URL` | Browser | Optional VPS/API origin if a long-running backend is added |
@@ -88,6 +90,8 @@ Never prefix a secret with `VITE_`; Vite exposes those variables to browser bund
 9. Connect the custom domain and enforce HTTPS.
 
 `wrangler.toml` now uses Workers static assets with `not_found_handling = "single-page-application"` so client-side routes work after deployment. `public/_headers` supplies a starter security policy. Tighten the Content Security Policy whenever new services are added.
+
+Important runtime note: because deployment runs through `npx wrangler deploy`, `/api/*` executes as the Worker defined by `worker/index.ts`. If an API route returns `missing_runtime_bindings`, set those variables/secrets on the deployed Worker runtime environment, not only as Pages build variables. Non-secret values may be set as Worker variables; `SUPABASE_SERVICE_ROLE_KEY` and `RESEND_API_KEY` must be Worker secrets.
 
 To test locally after configuring `.dev.vars`, build and use Wrangler:
 

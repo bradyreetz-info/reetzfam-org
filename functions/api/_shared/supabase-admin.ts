@@ -2,6 +2,8 @@ import { createClient } from '@supabase/supabase-js'
 import { json } from './http'
 
 export interface Env {
+  SUPABASE_URL?: string
+  SUPABASE_ANON_KEY?: string
   VITE_SUPABASE_URL?: string
   VITE_SUPABASE_ANON_KEY?: string
   SUPABASE_SERVICE_ROLE_KEY?: string
@@ -21,8 +23,16 @@ interface AdminProfile {
 
 const adminRoles = new Set(['admin', 'super_admin'])
 
+export function getSupabaseUrl(env: Env) {
+  return env.SUPABASE_URL || env.VITE_SUPABASE_URL
+}
+
+export function getSupabaseAnonKey(env: Env) {
+  return env.SUPABASE_ANON_KEY || env.VITE_SUPABASE_ANON_KEY
+}
+
 export function createSupabaseAdmin(env: Env) {
-  return createClient(env.VITE_SUPABASE_URL!, env.SUPABASE_SERVICE_ROLE_KEY!, {
+  return createClient(getSupabaseUrl(env)!, env.SUPABASE_SERVICE_ROLE_KEY!, {
     auth: { persistSession: false, autoRefreshToken: false },
   })
 }
@@ -34,14 +44,17 @@ export function getBearerToken(request: Request) {
 }
 
 export async function requireAdmin(request: Request, env: Env) {
-  if (!env.VITE_SUPABASE_URL || !env.VITE_SUPABASE_ANON_KEY || !env.SUPABASE_SERVICE_ROLE_KEY) {
+  const supabaseUrl = getSupabaseUrl(env)
+  const supabaseAnonKey = getSupabaseAnonKey(env)
+
+  if (!supabaseUrl || !supabaseAnonKey || !env.SUPABASE_SERVICE_ROLE_KEY) {
     return { ok: false as const, response: json({ error: 'Supabase admin API is not configured.' }, 503) }
   }
 
   const token = getBearerToken(request)
   if (!token) return { ok: false as const, response: json({ error: 'Authentication required.' }, 401) }
 
-  const userClient = createClient(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_ANON_KEY, {
+  const userClient = createClient(supabaseUrl, supabaseAnonKey, {
     auth: { persistSession: false, autoRefreshToken: false },
     global: { headers: { Authorization: `Bearer ${token}` } },
   })
