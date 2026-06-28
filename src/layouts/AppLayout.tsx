@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
-import { Bell, BookOpen, CalendarDays, ChevronDown, FileText, Images, LayoutDashboard, LogOut, Menu, Megaphone, Settings, ShieldCheck, Users, X } from 'lucide-react'
+import { Bell, BookOpen, CalendarDays, ChevronDown, FileText, Images, LayoutDashboard, ListChecks, LogOut, Menu, Megaphone, Settings, ShieldCheck, Users, X } from 'lucide-react'
 import { Brand } from '../components/Brand'
 import { useAuth } from '../lib/auth'
 
@@ -9,6 +9,7 @@ const navItems = [
   { to: '/app/directory', label: 'Family directory', icon: Users },
   { to: '/app/calendar', label: 'Calendar', icon: CalendarDays },
   { to: '/app/announcements', label: 'Announcements', icon: Megaphone },
+  { to: '/app/onboarding', label: 'Finish profile', icon: ListChecks },
   { to: '/app/photos', label: 'Photos', icon: Images },
   { to: '/app/documents', label: 'Documents', icon: FileText },
   { to: '/app/family-tree-placeholder', label: 'Family history', icon: BookOpen },

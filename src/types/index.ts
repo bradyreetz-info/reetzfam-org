@@ -6,15 +6,36 @@ export interface UserProfile {
   auth_user_id?: string
   email: string
   first_name: string
+  middle_name?: string | null
   last_name: string
   display_name: string
+  preferred_name?: string | null
   phone?: string
   role: UserRole
   status: UserStatus
+  gender?: string | null
+  pronouns?: string | null
+  birthdate?: string | null
+  birthdate_visibility?: 'full' | 'month_day' | 'private'
+  profile_photo_url?: string | null
+  short_bio?: string | null
+  mailing_address?: string | null
+  mailing_city?: string | null
+  mailing_state?: string | null
+  mailing_postal_code?: string | null
+  mailing_country?: string | null
+  contact_preference?: string | null
+  allow_family_announcements?: boolean
+  emergency_contact_notes?: string | null
   created_at: string
   approved_at?: string
   approved_by?: string
+  onboarding_current_step?: string | null
+  onboarding_completed_at?: string | null
+  onboarding_dismissed_at?: string | null
 }
+
+export type ProfileVisibility = 'private' | 'admins' | 'members' | 'public_profile'
 
 export interface FamilyMember {
   id: string

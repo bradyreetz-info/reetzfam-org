@@ -25,6 +25,7 @@ This project should keep the browser app and Cloudflare edge Functions/Workers a
 - Manually create the first approved admin profile
 - Test RLS with anon, pending, member, editor, admin, and super-admin users
 - Run `005_private_storage_buckets.sql` after enabling Supabase Storage to create the private `family-photos` and `family-documents` buckets
+- Run `006_profile_onboarding.sql` to enable the post-approval profile wizard, public profile metadata, and private archive metadata fields
 
 ### Resend
 
@@ -65,3 +66,4 @@ If a VPS API is added later:
 - Approval calls the `review_access_request(...)` RPC so request review, account activation/denial, member profile provisioning, and audit logging happen atomically
 - The auth-linking migration connects approved profiles to future Supabase Auth users by email
 - The profile visibility migration lets logged-in pending/denied users read only their own status so the app can show the correct access screen without exposing family data
+- Approved users with incomplete onboarding are sent to `/app/onboarding` until they finish or choose to save and continue later

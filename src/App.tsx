@@ -15,8 +15,10 @@ const DirectoryPage = lazy(() => import('./pages/app/DirectoryPage').then(module
 const CalendarPage = lazy(() => import('./pages/app/CalendarPage').then(module => ({ default: module.CalendarPage })))
 const AnnouncementsPage = lazy(() => import('./pages/app/AnnouncementsPage').then(module => ({ default: module.AnnouncementsPage })))
 const ProfilePage = lazy(() => import('./pages/app/ProfilePage').then(module => ({ default: module.ProfilePage })))
+const OnboardingPage = lazy(() => import('./pages/app/OnboardingPage').then(module => ({ default: module.OnboardingPage })))
 const LibraryPage = lazy(() => import('./pages/app/LibraryPage').then(module => ({ default: module.LibraryPage })))
 const FamilyTreePage = lazy(() => import('./pages/app/FamilyTreePage').then(module => ({ default: module.FamilyTreePage })))
+const PublicProfilePage = lazy(() => import('./pages/public/PublicProfilePage').then(module => ({ default: module.PublicProfilePage })))
 const AdminDashboardPage = lazy(() => import('./pages/admin/AdminDashboardPage').then(module => ({ default: module.AdminDashboardPage })))
 const ApprovalsPage = lazy(() => import('./pages/admin/ApprovalsPage').then(module => ({ default: module.ApprovalsPage })))
 const AdminSectionPage = lazy(() => import('./pages/admin/AdminSectionPage').then(module => ({ default: module.AdminSectionPage })))
@@ -29,6 +31,8 @@ function ProtectedRoute({ adminOnly = false }: { adminOnly?: boolean }) {
   if (profile.status !== 'approved' || profile.role === 'pending') return <PendingAccess />
   const isAdmin = profile.role === 'admin' || profile.role === 'super_admin'
   if (adminOnly && !isAdmin) return <Navigate to="/app" replace />
+  const onboardingDone = Boolean(profile.onboarding_completed_at || profile.onboarding_dismissed_at)
+  if (!adminOnly && !onboardingDone && location.pathname !== '/app/onboarding') return <Navigate to="/app/onboarding" replace />
   return <AppLayout />
 }
 
@@ -41,6 +45,7 @@ export default function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/request-access" element={<RequestAccessPage />} />
         <Route path="/privacy" element={<PrivacyPage />} />
+        <Route path="/:profileSlug" element={<PublicProfilePage />} />
       </Route>
 
       <Route element={<ProtectedRoute />}>
@@ -49,6 +54,7 @@ export default function App() {
         <Route path="/app/calendar" element={<CalendarPage />} />
         <Route path="/app/announcements" element={<AnnouncementsPage />} />
         <Route path="/app/profile" element={<ProfilePage />} />
+        <Route path="/app/onboarding" element={<OnboardingPage />} />
         <Route path="/app/photos" element={<LibraryPage type="photos" />} />
         <Route path="/app/documents" element={<LibraryPage type="documents" />} />
         <Route path="/app/family-tree-placeholder" element={<FamilyTreePage />} />

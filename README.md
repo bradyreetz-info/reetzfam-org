@@ -10,6 +10,7 @@ This repository contains a polished first product pass. It runs with fictional p
 - Supabase-aware email/password, sign-up, password reset, and magic-link authentication provider
 - Authentication guard for all `/app/*` routes and role guard for all `/admin/*` routes
 - Member dashboard, searchable family directory, profile detail, FullCalendar month/list views, announcements, profile editing, library placeholders, and family-history placeholder
+- Post-approval `/app/onboarding` wizard for profile basics, contact preferences, family relationships, important dates, optional public profile page, and archive metadata
 - Admin dashboard, approval workflow preview, protected management sections, and audit-log placeholder
 - Cloudflare Pages Function that validates and stores a pending access request, then notifies the admin through Resend
 - Protected admin approval actions that activate approved profiles, deny pending profiles when appropriate, write audit logs, and send requester emails
@@ -122,8 +123,9 @@ When using the Supabase SQL Editor manually, paste and run the actual file conte
 3. `003_admin_review_access_requests.sql`
 4. `004_account_activation_and_profile_visibility.sql`
 5. `005_private_storage_buckets.sql`
+6. `006_profile_onboarding.sql`
 
-The query tab name in Supabase is only a label; verify the first comment line matches the migration you intend to run. Migration `001` is safe to re-run if an earlier attempt already created enum types or policies. Migration `005` creates private Supabase Storage buckets named `family-photos` and `family-documents`.
+The query tab name in Supabase is only a label; verify the first comment line matches the migration you intend to run. Migration `001` is safe to re-run if an earlier attempt already created enum types or policies. Migration `005` creates private Supabase Storage buckets named `family-photos` and `family-documents`. Migration `006` adds the post-approval profile onboarding tables and public-profile metadata controls.
 
 ### Current approval and login flow
 
@@ -132,7 +134,8 @@ The query tab name in Supabase is only a label; verify the first comment line ma
 3. An approved admin reviews the request at `/admin/approvals`.
 4. Approval calls `review_access_request(...)`, activates or creates the matching approved profile, writes `audit_log`, and sends the welcome email.
 5. The approved person uses `/login` to create an account, sign in with password, or request an email link. Supabase links the Auth user to the approved profile by matching email.
-6. Pending or denied users can sign in, but route guards and RLS keep member data private.
+6. On first approved login, incomplete members are guided to `/app/onboarding`. They may finish the wizard or save progress and continue later.
+7. Pending or denied users can sign in, but route guards and RLS keep member data private.
 
 ## Resend setup checklist
 
@@ -165,6 +168,7 @@ docs/               Data-model and security guidance
 - All family data is private by default. The public bundle contains fictional examples only.
 - Client-side guards are navigation conveniences; Supabase RLS and server-side authorization are the security boundary.
 - New requests and newly created accounts remain pending until an admin explicitly approves them.
+- Post-approval onboarding is private by default. Public profile pages stay disabled until a member explicitly enables one and chooses a slug.
 - Service-role operations belong in narrowly scoped Cloudflare Functions, never React code.
 - Avoid analytics until a privacy decision is made. Do not send profile data to logging or monitoring services.
 - Add rate limiting and Turnstile to the public form before launch.
