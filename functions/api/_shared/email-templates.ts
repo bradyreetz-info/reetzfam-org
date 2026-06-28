@@ -21,7 +21,7 @@ export const newAccessRequestEmail = (data: RequestEmailData) => ({
 
 export const approvedWelcomeEmail = (name: string, loginUrl: string) => ({
   subject: 'Welcome to ReetzFam.org',
-  html: shell('Your family portal access has been approved.', `<h1 style="font-size:26px">Welcome, ${escapeHtml(name)}.</h1><p style="color:#667085;line-height:1.6">Your access request was approved. You can now sign in to the private family portal.</p><a href="${escapeHtml(loginUrl)}" style="display:inline-block;padding:12px 18px;border-radius:8px;background:#315c45;color:#fff;text-decoration:none;font-weight:bold">Sign in</a>`),
+  html: shell('Your family portal access has been approved.', `<h1 style="font-size:26px">Welcome, ${escapeHtml(name)}.</h1><p style="color:#667085;line-height:1.6">Your access request was approved. Create your account or use an email link with this same address, then sign in to the private family portal.</p><a href="${escapeHtml(loginUrl)}" style="display:inline-block;padding:12px 18px;border-radius:8px;background:#315c45;color:#fff;text-decoration:none;font-weight:bold">Open login</a>`),
 })
 
 export const deniedOrMoreInfoEmail = (name: string, message: string) => ({

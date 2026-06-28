@@ -60,5 +60,6 @@ If a VPS API is added later:
 - Admin review actions patch `/api/admin/access-requests/:id`
 - `worker/index.ts` routes `/api/*` requests to the same handler modules used by the original Pages Functions layout, then serves static assets for everything else
 - Admin endpoints require a valid Supabase session and an approved `admin` or `super_admin` profile
-- Approval calls the `review_access_request(...)` RPC so request review, member profile provisioning, and audit logging happen atomically
+- Approval calls the `review_access_request(...)` RPC so request review, account activation/denial, member profile provisioning, and audit logging happen atomically
 - The auth-linking migration connects approved profiles to future Supabase Auth users by email
+- The profile visibility migration lets logged-in pending/denied users read only their own status so the app can show the correct access screen without exposing family data

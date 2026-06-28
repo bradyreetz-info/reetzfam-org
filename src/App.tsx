@@ -26,8 +26,7 @@ function ProtectedRoute({ adminOnly = false }: { adminOnly?: boolean }) {
   const location = useLocation()
   if (loading) return <div className="screen-center"><Spinner label="Checking your access" /></div>
   if (!profile) return <Navigate to="/login" state={{ from: location }} replace />
-  if (profile.status === 'pending' || profile.role === 'pending') return <PendingAccess />
-  if (profile.status !== 'approved') return <Navigate to="/login" replace />
+  if (profile.status !== 'approved' || profile.role === 'pending') return <PendingAccess />
   const isAdmin = profile.role === 'admin' || profile.role === 'super_admin'
   if (adminOnly && !isAdmin) return <Navigate to="/app" replace />
   return <AppLayout />
