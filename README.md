@@ -92,7 +92,7 @@ Never prefix a secret with `VITE_`; Vite exposes those variables to browser bund
 
 `wrangler.toml` now uses Workers static assets with `not_found_handling = "single-page-application"` so client-side routes work after deployment. `public/_headers` supplies a starter security policy. Tighten the Content Security Policy whenever new services are added.
 
-Important runtime note: because deployment runs through `npx wrangler deploy`, `/api/*` executes as the Worker defined by `worker/index.ts`. If an API route returns `missing_runtime_bindings`, set those variables/secrets on the deployed Worker runtime environment, not only as Pages build variables. Non-secret values may be set as Worker variables; `SUPABASE_SERVICE_ROLE_KEY` and `RESEND_API_KEY` must be Worker secrets.
+Important runtime note: because deployment runs through `npx wrangler deploy`, `/api/*` executes as the Worker defined by `worker/index.ts`. If an API route returns `missing_runtime_bindings`, set those variables/secrets on the deployed Worker runtime environment, not only as Pages build variables. Non-secret values may be set as Worker variables; `SUPABASE_SERVICE_ROLE_KEY` and `RESEND_API_KEY` must be Worker secrets. `SUPABASE_SERVICE_ROLE_KEY` may be either Supabase's newer `sb_secret_...` key or the legacy JWT `service_role` key; the Worker handles the REST headers differently for each.
 
 To test locally after configuring `.dev.vars`, build and use Wrangler:
 

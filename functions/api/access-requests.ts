@@ -1,6 +1,6 @@
 import { newAccessRequestEmail } from './_shared/email-templates'
 import { sendEmail } from './_shared/send-email'
-import { getSupabaseUrl, type Env } from './_shared/supabase-admin'
+import { getSupabaseServiceHeaders, getSupabaseUrl, type Env } from './_shared/supabase-admin'
 
 interface PagesContext { request: Request; env: Env }
 
@@ -55,15 +55,13 @@ export const onRequestPost = async ({ request, env }: PagesContext) => {
   const insertResponse = await fetch(`${getSupabaseUrl(env)}/rest/v1/access_requests`, {
     method: 'POST',
     headers: {
-      apikey: env.SUPABASE_SERVICE_ROLE_KEY,
-      Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
-      'Content-Type': 'application/json',
+      ...getSupabaseServiceHeaders(env),
       Prefer: 'return=representation',
     },
     body: JSON.stringify(record),
   })
   if (!insertResponse.ok) {
-    console.error('Supabase access request insert failed', insertResponse.status)
+    console.error('Supabase access request insert failed', insertResponse.status, await insertResponse.text().catch(() => ''))
     return json({ error: 'We could not save your request. Please try again later.' }, 500)
   }
 

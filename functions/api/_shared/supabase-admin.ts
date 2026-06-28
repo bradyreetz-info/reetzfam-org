@@ -31,6 +31,25 @@ export function getSupabaseAnonKey(env: Env) {
   return env.SUPABASE_ANON_KEY || env.VITE_SUPABASE_ANON_KEY
 }
 
+export function isLegacyJwtKey(key?: string) {
+  return Boolean(key && key.split('.').length === 3)
+}
+
+export function getSupabaseServiceHeaders(env: Env, includeJson = true) {
+  const key = env.SUPABASE_SERVICE_ROLE_KEY!
+  const headers: Record<string, string> = {
+    apikey: key,
+  }
+
+  // Supabase's newer `sb_secret_...` keys authenticate through the `apikey`
+  // header. Legacy JWT service_role keys still need the Authorization bearer
+  // header for PostgREST to assume the service_role database role.
+  if (isLegacyJwtKey(key)) headers.Authorization = `Bearer ${key}`
+  if (includeJson) headers['Content-Type'] = 'application/json'
+
+  return headers
+}
+
 export function createSupabaseAdmin(env: Env) {
   return createClient(getSupabaseUrl(env)!, env.SUPABASE_SERVICE_ROLE_KEY!, {
     auth: { persistSession: false, autoRefreshToken: false },
