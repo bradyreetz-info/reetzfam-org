@@ -21,6 +21,8 @@ interface AuthContextValue {
   signUp: (input: SignUpInput) => Promise<{ needsEmailConfirmation: boolean }>
   sendMagicLink: (email: string) => Promise<void>
   sendPasswordReset: (email: string) => Promise<void>
+  refreshProfile: () => Promise<void>
+  updateProfileSnapshot: (patch: Partial<UserProfile>) => void
   signOut: () => Promise<void>
 }
 
@@ -51,8 +53,20 @@ export function AuthProvider({ children }: PropsWithChildren) {
     if (!supabase) return
     const { data, error } = await supabase.from('profiles').select('*').eq('auth_user_id', authUser.id).maybeSingle()
     if (error) throw error
-    if (data) setProfile(data as UserProfile)
-    else setProfile({
+    if (data) {
+      const next = data as UserProfile
+      const { data: onboarding } = await supabase
+        .from('profile_onboarding_state')
+        .select('current_step,completed_at,dismissed_at')
+        .eq('profile_id', next.id)
+        .maybeSingle()
+      if (onboarding) {
+        next.onboarding_current_step = onboarding.current_step
+        next.onboarding_completed_at = onboarding.completed_at
+        next.onboarding_dismissed_at = onboarding.dismissed_at
+      }
+      setProfile(next)
+    } else setProfile({
       id: 'unprovisioned',
       auth_user_id: authUser.id,
       email: authUser.email ?? '',
@@ -63,6 +77,14 @@ export function AuthProvider({ children }: PropsWithChildren) {
       status: 'pending',
       created_at: authUser.created_at,
     })
+  }, [])
+
+  const refreshProfile = useCallback(async () => {
+    if (user) await loadProfile(user)
+  }, [loadProfile, user])
+
+  const updateProfileSnapshot = useCallback((patch: Partial<UserProfile>) => {
+    setProfile(current => current ? { ...current, ...patch } : current)
   }, [])
 
   useEffect(() => {
@@ -176,8 +198,10 @@ export function AuthProvider({ children }: PropsWithChildren) {
     signUp,
     sendMagicLink,
     sendPasswordReset,
+    refreshProfile,
+    updateProfileSnapshot,
     signOut,
-  }), [user, profile, loading, signIn, signUp, sendMagicLink, sendPasswordReset, signOut])
+  }), [user, profile, loading, signIn, signUp, sendMagicLink, sendPasswordReset, refreshProfile, updateProfileSnapshot, signOut])
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

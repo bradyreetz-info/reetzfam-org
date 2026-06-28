@@ -26,6 +26,7 @@ The included demo mode is for local interface review only. It stores a fictional
 - No real family information belongs in source code, logs, public HTML, analytics payloads, or error messages.
 - New users and access requests remain pending until manually approved.
 - New member records and uploaded files default to the narrowest practical visibility.
+- Public profile pages are disabled by default and can only expose fields saved in `profile_public_pages` plus links explicitly marked `public_profile`.
 - Emergency contacts, full birthdates, street addresses, and relationship notes need field-level visibility decisions before launch.
 - Do not email private announcement bodies unless recipients have opted in; prefer a short notice linking back to the authenticated portal.
 
