@@ -2,6 +2,15 @@
 -- Pending, denied, and suspended users must be able to read only their own
 -- profile status so the app can show the correct access state after login.
 
+do $$
+begin
+  if to_regclass('public.profiles') is null then
+    raise exception 'Run 001_initial_schema.sql before 004_account_activation_and_profile_visibility.sql.';
+  end if;
+end $$;
+
+drop policy if exists "users view own profile status" on public.profiles;
+
 create policy "users view own profile status" on public.profiles
 for select
 using (auth_user_id = auth.uid());

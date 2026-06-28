@@ -2,6 +2,8 @@
 
 The source-of-truth draft starts in [`supabase/migrations/001_initial_schema.sql`](../supabase/migrations/001_initial_schema.sql). It creates the first Postgres schema, indexes, helper functions, and starter Row Level Security policies. [`supabase/migrations/002_auth_profile_linking.sql`](../supabase/migrations/002_auth_profile_linking.sql) links future Supabase Auth users to already-approved profile records by matching email addresses. [`supabase/migrations/003_admin_review_access_requests.sql`](../supabase/migrations/003_admin_review_access_requests.sql) keeps request review, member profile provisioning, and audit logging together in one database transaction. [`supabase/migrations/004_account_activation_and_profile_visibility.sql`](../supabase/migrations/004_account_activation_and_profile_visibility.sql) lets signed-in users read only their own profile status and refines approved/denied account activation.
 
+If applying through the Supabase SQL Editor, run the files in numeric order. The editor’s saved query names are not reliable evidence of what is pasted into the editor; check the opening comments before pressing Run. `001_initial_schema.sql` is intentionally idempotent for manual setup so it can repair a partial run where enum types were created before tables/policies.
+
 ## Core entities
 
 | Table | Purpose | Sensitive by default |
