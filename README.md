@@ -117,8 +117,9 @@ When using the Supabase SQL Editor manually, paste and run the actual file conte
 2. `002_auth_profile_linking.sql`
 3. `003_admin_review_access_requests.sql`
 4. `004_account_activation_and_profile_visibility.sql`
+5. `005_private_storage_buckets.sql`
 
-The query tab name in Supabase is only a label; verify the first comment line matches the migration you intend to run. Migration `001` is safe to re-run if an earlier attempt already created enum types or policies.
+The query tab name in Supabase is only a label; verify the first comment line matches the migration you intend to run. Migration `001` is safe to re-run if an earlier attempt already created enum types or policies. Migration `005` creates private Supabase Storage buckets named `family-photos` and `family-documents`.
 
 ### Current approval and login flow
 

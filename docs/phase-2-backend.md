@@ -23,6 +23,7 @@ This project should keep the browser app and Cloudflare edge Functions/Workers a
 - Configure Auth site URL and redirect URLs for `https://reetzfam.org/app`
 - Manually create the first approved admin profile
 - Test RLS with anon, pending, member, editor, admin, and super-admin users
+- Run `005_private_storage_buckets.sql` after enabling Supabase Storage to create the private `family-photos` and `family-documents` buckets
 
 ### Resend
 
