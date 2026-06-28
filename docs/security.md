@@ -8,7 +8,7 @@ ReetzFam.org handles contact details, birthdays, relationships, addresses, photo
 - Apply and test every RLS policy in a staging project with pending, member, editor, and admin accounts.
 - Keep `SUPABASE_SERVICE_ROLE_KEY` and `RESEND_API_KEY` only in Cloudflare encrypted secrets.
 - Add Cloudflare Turnstile and rate limiting to the access-request endpoint.
-- Create private storage buckets and `storage.objects` RLS policies. Use short-lived signed URLs.
+- Create private storage buckets and `storage.objects` RLS policies. If the SQL Editor warns that it is not the owner of `storage.objects`, finish those policies in Supabase Storage > Policies before enabling browser uploads. Use short-lived signed URLs.
 - Keep approval in protected server-side Functions and write admin actions to `audit_log`.
 - Require MFA for admins, restrict the number of `super_admin` accounts, and review roles periodically.
 - Configure security headers (CSP, HSTS, `Referrer-Policy`, `Permissions-Policy`) at Cloudflare.

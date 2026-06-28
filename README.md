@@ -125,7 +125,7 @@ When using the Supabase SQL Editor manually, paste and run the actual file conte
 5. `005_private_storage_buckets.sql`
 6. `006_profile_onboarding.sql`
 
-The query tab name in Supabase is only a label; verify the first comment line matches the migration you intend to run. Migration `001` is safe to re-run if an earlier attempt already created enum types or policies. Migration `005` creates private Supabase Storage buckets named `family-photos` and `family-documents`. Migration `006` adds the post-approval profile onboarding tables and public-profile metadata controls.
+The query tab name in Supabase is only a label; verify the first comment line matches the migration you intend to run. Migration `001` is safe to re-run if an earlier attempt already created enum types or policies. Migration `005` creates private Supabase Storage buckets named `family-photos` and `family-documents`. If the SQL Editor cannot own `storage.objects`, the migration will keep the buckets private and warn that equivalent storage policies must be added from Supabase Storage > Policies. Migration `006` adds the post-approval profile onboarding tables and public-profile metadata controls.
 
 ### Current approval and login flow
 

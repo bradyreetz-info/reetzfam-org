@@ -7,6 +7,13 @@
 -- - admins may read/update/delete every object
 -- - approved members may read objects with a matching library_items row whose
 --   visibility is set to 'members'
+--
+-- Hosted Supabase projects may not let the SQL Editor's `postgres` role create
+-- policies directly on `storage.objects` because that table is owned by
+-- `supabase_storage_admin`. This migration attempts to switch to that role for
+-- the policy DDL. If the project does not allow that, the buckets are still
+-- created and a warning is raised with next-step guidance instead of aborting
+-- the whole migration.
 
 do $$
 begin
@@ -62,75 +69,105 @@ set
   file_size_limit = excluded.file_size_limit,
   allowed_mime_types = excluded.allowed_mime_types;
 
-alter table storage.objects enable row level security;
+do $$
+declare
+  assumed_storage_admin boolean := false;
+begin
+  begin
+    execute 'set local role supabase_storage_admin';
+    assumed_storage_admin := true;
+  exception
+    when insufficient_privilege or undefined_object then
+      raise warning 'Could not assume supabase_storage_admin. Buckets were created, but storage.objects policies may need to be added through Supabase Storage > Policies.';
+  end;
 
-drop policy if exists "members upload family storage objects" on storage.objects;
-drop policy if exists "members read family storage objects" on storage.objects;
-drop policy if exists "uploaders update family storage objects" on storage.objects;
-drop policy if exists "uploaders delete family storage objects" on storage.objects;
+  begin
+    execute 'alter table storage.objects enable row level security';
 
-create policy "members upload family storage objects"
-on storage.objects
-for insert
-with check (
-  bucket_id in ('family-photos', 'family-documents')
-  and public.is_approved_member()
-);
+    execute 'drop policy if exists "members upload family storage objects" on storage.objects';
+    execute 'drop policy if exists "members read family storage objects" on storage.objects';
+    execute 'drop policy if exists "uploaders update family storage objects" on storage.objects';
+    execute 'drop policy if exists "uploaders delete family storage objects" on storage.objects';
 
-create policy "members read family storage objects"
-on storage.objects
-for select
-using (
-  bucket_id in ('family-photos', 'family-documents')
-  and (
-    public.has_role(array['admin','super_admin']::public.user_role[])
-    or (
-      public.is_approved_member()
-      and (
-        owner = auth.uid()
-        or exists (
-          select 1
-          from public.library_items item
-          where item.storage_path = storage.objects.name
+    execute $policy$
+      create policy "members upload family storage objects"
+      on storage.objects
+      for insert
+      with check (
+        bucket_id in ('family-photos', 'family-documents')
+        and public.is_approved_member()
+      )
+    $policy$;
+
+    execute $policy$
+      create policy "members read family storage objects"
+      on storage.objects
+      for select
+      using (
+        bucket_id in ('family-photos', 'family-documents')
+        and (
+          public.has_role(array['admin','super_admin']::public.user_role[])
+          or (
+            public.is_approved_member()
             and (
-              (storage.objects.bucket_id = 'family-photos' and item.item_type = 'photo')
-              or (storage.objects.bucket_id = 'family-documents' and item.item_type = 'document')
+              owner = auth.uid()
+              or exists (
+                select 1
+                from public.library_items item
+                where item.storage_path = storage.objects.name
+                  and (
+                    (storage.objects.bucket_id = 'family-photos' and item.item_type = 'photo')
+                    or (storage.objects.bucket_id = 'family-documents' and item.item_type = 'document')
+                  )
+                  and (
+                    item.visibility = 'members'
+                    or item.uploaded_by = public.current_profile_id()
+                  )
+              )
             )
-            and (
-              item.visibility = 'members'
-              or item.uploaded_by = public.current_profile_id()
-            )
+          )
         )
       )
-    )
-  )
-);
+    $policy$;
 
-create policy "uploaders update family storage objects"
-on storage.objects
-for update
-using (
-  bucket_id in ('family-photos', 'family-documents')
-  and (
-    (public.is_approved_member() and owner = auth.uid())
-    or public.has_role(array['admin','super_admin']::public.user_role[])
-  )
-)
-with check (
-  bucket_id in ('family-photos', 'family-documents')
-  and (
-    (public.is_approved_member() and owner = auth.uid())
-    or public.has_role(array['admin','super_admin']::public.user_role[])
-  )
-);
+    execute $policy$
+      create policy "uploaders update family storage objects"
+      on storage.objects
+      for update
+      using (
+        bucket_id in ('family-photos', 'family-documents')
+        and (
+          (public.is_approved_member() and owner = auth.uid())
+          or public.has_role(array['admin','super_admin']::public.user_role[])
+        )
+      )
+      with check (
+        bucket_id in ('family-photos', 'family-documents')
+        and (
+          (public.is_approved_member() and owner = auth.uid())
+          or public.has_role(array['admin','super_admin']::public.user_role[])
+        )
+      )
+    $policy$;
 
-create policy "uploaders delete family storage objects"
-on storage.objects
-for delete
-using (
-  bucket_id in ('family-photos', 'family-documents')
-  and (
-    (public.is_approved_member() and owner = auth.uid())
-    or public.has_role(array['admin','super_admin']::public.user_role[])
-  )
-);
+    execute $policy$
+      create policy "uploaders delete family storage objects"
+      on storage.objects
+      for delete
+      using (
+        bucket_id in ('family-photos', 'family-documents')
+        and (
+          (public.is_approved_member() and owner = auth.uid())
+          or public.has_role(array['admin','super_admin']::public.user_role[])
+        )
+      )
+    $policy$;
+  exception
+    when insufficient_privilege then
+      raise warning 'Could not create storage.objects policies because the active SQL role is not the table owner. Buckets are private, but browser uploads/reads will need equivalent policies created in Supabase Storage > Policies.';
+  end;
+
+  if assumed_storage_admin then
+    execute 'reset role';
+  end if;
+end $$;
