@@ -15,6 +15,7 @@ This project should keep the browser app and Cloudflare edge Functions/Workers a
 - Custom domains: `reetzfam.org` and optionally `www.reetzfam.org`
 - Function secrets: `SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY`, `ADMIN_APPROVAL_EMAIL`, later `TURNSTILE_SECRET_KEY`
 - Build/runtime variables: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_DEMO_MODE=false`, `APP_BASE_URL=https://reetzfam.org`, optional `RESEND_FROM_EMAIL`
+- Worker runtime aliases are also supported: `SUPABASE_URL` and `SUPABASE_ANON_KEY`. For the `npx wrangler deploy` path, make sure API secrets are attached to the Worker runtime, not only to Pages build variables.
 
 ### Supabase
 
@@ -23,6 +24,7 @@ This project should keep the browser app and Cloudflare edge Functions/Workers a
 - Configure Auth site URL and redirect URLs for `https://reetzfam.org/app`
 - Manually create the first approved admin profile
 - Test RLS with anon, pending, member, editor, admin, and super-admin users
+- Run `005_private_storage_buckets.sql` after enabling Supabase Storage to create the private `family-photos` and `family-documents` buckets
 
 ### Resend
 

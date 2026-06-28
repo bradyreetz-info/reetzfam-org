@@ -1,6 +1,6 @@
 import { newAccessRequestEmail } from './_shared/email-templates'
 import { sendEmail } from './_shared/send-email'
-import type { Env } from './_shared/supabase-admin'
+import { getSupabaseUrl, type Env } from './_shared/supabase-admin'
 
 interface PagesContext { request: Request; env: Env }
 
@@ -9,10 +9,25 @@ const json = (body: unknown, status = 200) => new Response(JSON.stringify(body),
   headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
 })
 
+function missingRuntimeBindings(env: Env) {
+  const missing: string[] = []
+  if (!getSupabaseUrl(env)) missing.push('SUPABASE_URL or VITE_SUPABASE_URL')
+  if (!env.SUPABASE_SERVICE_ROLE_KEY) missing.push('SUPABASE_SERVICE_ROLE_KEY')
+  if (!env.RESEND_API_KEY) missing.push('RESEND_API_KEY')
+  if (!env.ADMIN_APPROVAL_EMAIL) missing.push('ADMIN_APPROVAL_EMAIL')
+  return missing
+}
+
 export const onRequestPost = async ({ request, env }: PagesContext) => {
   // TODO: Add Cloudflare Turnstile and a durable per-IP rate limit before production launch.
-  if (!env.VITE_SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY || !env.RESEND_API_KEY || !env.ADMIN_APPROVAL_EMAIL) {
-    return json({ error: 'Access requests are not configured yet. Please contact the family administrator.' }, 503)
+  const missing = missingRuntimeBindings(env)
+  if (missing.length > 0) {
+    console.error('Access request API missing runtime bindings', missing)
+    return json({
+      error: `Access requests are not configured yet. Missing runtime bindings: ${missing.join(', ')}.`,
+      code: 'missing_runtime_bindings',
+      missing,
+    }, 503)
   }
 
   let input: Record<string, unknown>
@@ -37,7 +52,7 @@ export const onRequestPost = async ({ request, env }: PagesContext) => {
     status: 'pending',
   }
 
-  const insertResponse = await fetch(`${env.VITE_SUPABASE_URL}/rest/v1/access_requests`, {
+  const insertResponse = await fetch(`${getSupabaseUrl(env)}/rest/v1/access_requests`, {
     method: 'POST',
     headers: {
       apikey: env.SUPABASE_SERVICE_ROLE_KEY,

@@ -2,12 +2,27 @@
 -- Review in a staging Supabase project before applying to production.
 create extension if not exists pgcrypto;
 
-create type public.user_role as enum ('pending', 'member', 'editor', 'admin', 'super_admin');
-create type public.user_status as enum ('pending', 'approved', 'denied', 'suspended');
-create type public.request_status as enum ('pending', 'approved', 'denied', 'more_info');
-create type public.visibility_level as enum ('members', 'editors', 'admins', 'private');
+do $$ begin
+  create type public.user_role as enum ('pending', 'member', 'editor', 'admin', 'super_admin');
+exception when duplicate_object then null;
+end $$;
 
-create table public.profiles (
+do $$ begin
+  create type public.user_status as enum ('pending', 'approved', 'denied', 'suspended');
+exception when duplicate_object then null;
+end $$;
+
+do $$ begin
+  create type public.request_status as enum ('pending', 'approved', 'denied', 'more_info');
+exception when duplicate_object then null;
+end $$;
+
+do $$ begin
+  create type public.visibility_level as enum ('members', 'editors', 'admins', 'private');
+exception when duplicate_object then null;
+end $$;
+
+create table if not exists public.profiles (
   id uuid primary key default gen_random_uuid(),
   auth_user_id uuid unique references auth.users(id) on delete cascade,
   email text not null unique,
@@ -22,7 +37,7 @@ create table public.profiles (
   approved_by uuid references public.profiles(id)
 );
 
-create table public.access_requests (
+create table if not exists public.access_requests (
   id uuid primary key default gen_random_uuid(),
   first_name text not null,
   last_name text not null,
@@ -38,7 +53,7 @@ create table public.access_requests (
   reviewed_by uuid references public.profiles(id)
 );
 
-create table public.households (
+create table if not exists public.households (
   id uuid primary key default gen_random_uuid(),
   household_name text not null,
   address text,
@@ -51,7 +66,7 @@ create table public.households (
   created_at timestamptz not null default now()
 );
 
-create table public.family_members (
+create table if not exists public.family_members (
   id uuid primary key default gen_random_uuid(),
   profile_id uuid unique references public.profiles(id) on delete set null,
   household_id uuid references public.households(id) on delete set null,
@@ -79,7 +94,7 @@ create table public.family_members (
   updated_at timestamptz not null default now()
 );
 
-create table public.calendar_events (
+create table if not exists public.calendar_events (
   id uuid primary key default gen_random_uuid(),
   title text not null,
   description text,
@@ -95,7 +110,7 @@ create table public.calendar_events (
   updated_at timestamptz not null default now()
 );
 
-create table public.announcements (
+create table if not exists public.announcements (
   id uuid primary key default gen_random_uuid(),
   title text not null,
   body text not null,
@@ -106,7 +121,7 @@ create table public.announcements (
   updated_at timestamptz not null default now()
 );
 
-create table public.library_items (
+create table if not exists public.library_items (
   id uuid primary key default gen_random_uuid(),
   title text not null,
   description text,
@@ -119,7 +134,7 @@ create table public.library_items (
   created_at timestamptz not null default now()
 );
 
-create table public.audit_log (
+create table if not exists public.audit_log (
   id uuid primary key default gen_random_uuid(),
   actor_user_id uuid references public.profiles(id),
   action text not null,
@@ -129,12 +144,12 @@ create table public.audit_log (
   created_at timestamptz not null default now()
 );
 
-create index access_requests_status_created_idx on public.access_requests(status, created_at desc);
-create index family_members_household_idx on public.family_members(household_id);
-create index family_members_name_idx on public.family_members(last_name, first_name);
-create index calendar_events_start_idx on public.calendar_events(start_date);
-create index announcements_pinned_created_idx on public.announcements(pinned desc, created_at desc);
-create index audit_log_created_idx on public.audit_log(created_at desc);
+create index if not exists access_requests_status_created_idx on public.access_requests(status, created_at desc);
+create index if not exists family_members_household_idx on public.family_members(household_id);
+create index if not exists family_members_name_idx on public.family_members(last_name, first_name);
+create index if not exists calendar_events_start_idx on public.calendar_events(start_date);
+create index if not exists announcements_pinned_created_idx on public.announcements(pinned desc, created_at desc);
+create index if not exists audit_log_created_idx on public.audit_log(created_at desc);
 
 create or replace function public.current_profile_id() returns uuid language sql stable security definer set search_path = public as $$
   select id from public.profiles where auth_user_id = auth.uid() limit 1;
@@ -154,6 +169,25 @@ alter table public.calendar_events enable row level security;
 alter table public.announcements enable row level security;
 alter table public.library_items enable row level security;
 alter table public.audit_log enable row level security;
+
+drop policy if exists "approved members view profiles" on public.profiles;
+drop policy if exists "members update own profile" on public.profiles;
+drop policy if exists "admins manage profiles" on public.profiles;
+drop policy if exists "admins review access requests" on public.access_requests;
+drop policy if exists "admins update access requests" on public.access_requests;
+drop policy if exists "members view permitted households" on public.households;
+drop policy if exists "admins manage households" on public.households;
+drop policy if exists "members view permitted family records" on public.family_members;
+drop policy if exists "members update own family record" on public.family_members;
+drop policy if exists "admins manage family records" on public.family_members;
+drop policy if exists "members view approved events" on public.calendar_events;
+drop policy if exists "editors manage events" on public.calendar_events;
+drop policy if exists "members view announcements" on public.announcements;
+drop policy if exists "editors manage announcements" on public.announcements;
+drop policy if exists "members view permitted library items" on public.library_items;
+drop policy if exists "members upload private library items" on public.library_items;
+drop policy if exists "uploaders or admins manage library items" on public.library_items;
+drop policy if exists "admins view audit log" on public.audit_log;
 
 create policy "approved members view profiles" on public.profiles for select using (public.is_approved_member());
 create policy "members update own profile" on public.profiles for update using (auth_user_id = auth.uid()) with check (auth_user_id = auth.uid());

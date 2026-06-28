@@ -63,6 +63,8 @@ Copy `.env.example` for local development. In Cloudflare Pages, configure browse
 | --- | --- | --- |
 | `VITE_SUPABASE_URL` | Browser + Function | Supabase project URL |
 | `VITE_SUPABASE_ANON_KEY` | Browser | Public Supabase anon key; safe only with tested RLS |
+| `SUPABASE_URL` | Worker runtime | Optional server-side alias for `VITE_SUPABASE_URL` |
+| `SUPABASE_ANON_KEY` | Worker runtime | Optional server-side alias for `VITE_SUPABASE_ANON_KEY` |
 | `VITE_DEMO_MODE` | Build | `true` only for non-production previews |
 | `VITE_TURNSTILE_SITE_KEY` | Browser | Public Cloudflare Turnstile site key once enabled |
 | `VITE_API_BASE_URL` | Browser | Optional VPS/API origin if a long-running backend is added |
@@ -89,6 +91,8 @@ Never prefix a secret with `VITE_`; Vite exposes those variables to browser bund
 
 `wrangler.toml` now uses Workers static assets with `not_found_handling = "single-page-application"` so client-side routes work after deployment. `public/_headers` supplies a starter security policy. Tighten the Content Security Policy whenever new services are added.
 
+Important runtime note: because deployment runs through `npx wrangler deploy`, `/api/*` executes as the Worker defined by `worker/index.ts`. If an API route returns `missing_runtime_bindings`, set those variables/secrets on the deployed Worker runtime environment, not only as Pages build variables. Non-secret values may be set as Worker variables; `SUPABASE_SERVICE_ROLE_KEY` and `RESEND_API_KEY` must be Worker secrets.
+
 To test locally after configuring `.dev.vars`, build and use Wrangler:
 
 ```bash
@@ -110,6 +114,16 @@ pnpm dlx wrangler dev
 10. Remove fictional mock data from production queries and keep a separate seed path for development.
 
 See [`docs/schema.md`](docs/schema.md) and [`docs/security.md`](docs/security.md) before launch.
+
+When using the Supabase SQL Editor manually, paste and run the actual file contents in this exact order:
+
+1. `001_initial_schema.sql`
+2. `002_auth_profile_linking.sql`
+3. `003_admin_review_access_requests.sql`
+4. `004_account_activation_and_profile_visibility.sql`
+5. `005_private_storage_buckets.sql`
+
+The query tab name in Supabase is only a label; verify the first comment line matches the migration you intend to run. Migration `001` is safe to re-run if an earlier attempt already created enum types or policies. Migration `005` creates private Supabase Storage buckets named `family-photos` and `family-documents`.
 
 ### Current approval and login flow
 
